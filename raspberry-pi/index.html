@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRU-01 Payload Release</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2317191b'/%3E%3Crect x='3' y='9' width='10' height='4' fill='%23ff4f1a'/%3E%3Cpath d='M8 2v7' stroke='%23ece8df' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #ece8df;
+    --paper-2: #e2ddd1;
+    --ink: #17191b;
+    --ink-2: #55585b;
+    --faint: rgba(23, 25, 27, .07);
+    --rule: rgba(23, 25, 27, .22);
+    --signal: #ff4f1a;
+    --signal-ink: #17191b;
+    --water: #2f6a86;
+    --cond: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #111315;
+      --paper-2: #1a1d20;
+      --ink: #e6e1d6;
+      --ink-2: #99958c;
+      --faint: rgba(230, 225, 214, .05);
+      --rule: rgba(230, 225, 214, .2);
+      --signal: #ff6a3d;
+      --signal-ink: #111315;
+      --water: #4f93b3;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #111315; --paper-2: #1a1d20; --ink: #e6e1d6; --ink-2: #99958c;
+    --faint: rgba(230, 225, 214, .05); --rule: rgba(230, 225, 214, .2);
+    --signal: #ff6a3d; --signal-ink: #111315; --water: #4f93b3;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--faint) 1px, transparent 1px),
+      linear-gradient(90deg, var(--faint) 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 14px;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 20px 16px 72px; }
+
+  /* ---------- Header plate ---------- */
+  .plate {
+    display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; gap: 12px;
+    border: 2px solid var(--ink); background: var(--paper); margin-bottom: 20px;
+  }
+  .ident { display: flex; align-items: stretch; }
+  .tag {
+    background: var(--ink); color: var(--paper); font-family: var(--cond); font-weight: 700;
+    font-size: 15px; letter-spacing: .08em; padding: 10px 12px; display: flex; align-items: center;
+  }
+  .title { padding: 8px 14px; display: flex; flex-direction: column; justify-content: center; }
+  h1 {
+    font-family: var(--cond); font-weight: 700; font-size: 24px; line-height: 1;
+    text-transform: uppercase; letter-spacing: .02em; margin: 0;
+  }
+  .title small { color: var(--ink-2); font-size: 11px; margin-top: 4px; letter-spacing: .04em; }
+
+  .linkbox { display: flex; align-items: center; gap: 12px; padding: 8px 12px; margin-left: auto; }
+  .lamp {
+    width: 12px; height: 12px; flex: none; border: 2px solid var(--ink); background: transparent;
+  }
+  .lamp.on { background: #2dbd6e; border-color: #1c7d48; box-shadow: 0 0 0 3px rgba(45,189,110,.18); }
+  .lamp.wait { background: var(--signal); border-color: var(--signal); animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .linktext { display: flex; flex-direction: column; line-height: 1.2; }
+  .linktext b { font-family: var(--cond); font-size: 16px; letter-spacing: .06em; text-transform: uppercase; }
+  .linktext span { color: var(--ink-2); font-size: 11px; }
+
+  .key {
+    border: 2px solid var(--ink); background: var(--paper); cursor: pointer; border-radius: 0;
+    font-family: var(--cond); font-weight: 700; font-size: 17px; letter-spacing: .07em;
+    text-transform: uppercase; padding: 10px 14px; transition: background .12s, color .12s, transform .05s;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  .key:hover:not(:disabled) { background: var(--paper-2); }
+  .key:active:not(:disabled) { transform: translateY(1px); }
+  .key:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+  .key:disabled { opacity: .35; cursor: not-allowed; }
+  .key[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .key[aria-pressed="true"]:hover:not(:disabled) { background: var(--ink); filter: brightness(1.15); }
+  .key.small { font-size: 14px; padding: 7px 12px; }
+
+  .banner {
+    border: 2px solid var(--signal); background: var(--paper); padding: 12px 14px; margin-bottom: 20px;
+    font-size: 13px; line-height: 1.5;
+  }
+  .banner b { font-family: var(--cond); font-size: 16px; letter-spacing: .05em; text-transform: uppercase; display: block; }
+  .banner[hidden] { display: none; }
+
+  /* ---------- Layout ---------- */
+  .grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+
+  .section { border-top: 2px solid var(--ink); padding: 12px 0 22px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;
+    font-family: var(--cond); font-weight: 700; font-size: 18px; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .section-head .n { color: var(--signal); font-family: var(--mono); font-size: 12px; font-weight: 600; }
+  .section-head .aside { margin-left: auto; font-family: var(--mono); font-weight: 400; font-size: 11px; letter-spacing: .02em; color: var(--ink-2); text-transform: none; }
+  .note { color: var(--ink-2); font-size: 12px; line-height: 1.55; margin: 10px 0 0; max-width: 56ch; }
+
+  /* ---------- Water column ---------- */
+  .column { border: 2px solid var(--ink); background: var(--paper); position: sticky; top: 16px; }
+  @media (max-width: 820px) { .column { position: static; } }
+  #col { display: block; width: 100%; height: 440px; }
+  @media (max-width: 820px) { #col { height: 230px; } }
+  .readouts { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--ink); margin: 0; }
+  .readouts div { padding: 8px 10px; min-width: 0; }
+  .readouts div:nth-child(odd) { border-right: 1px solid var(--rule); }
+  .readouts div:nth-child(n+3) { border-top: 1px solid var(--rule); }
+  .readouts dd.big { font-size: 22px; letter-spacing: -.01em; }
+  .mission {
+    display: flex; white-space: nowrap; overflow: hidden; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 2px solid var(--ink);
+    font-family: var(--cond); font-weight: 700; font-size: 15px; letter-spacing: .08em; text-transform: uppercase;
+    background: var(--paper-2);
+  }
+  .mission i { width: 8px; height: 8px; background: var(--ink-2); flex: none; }
+  .mission.active { background: var(--ink); color: var(--paper); }
+  .mission.active i { background: var(--signal); animation: blink 1s steps(2) infinite; }
+  .mission.alert { background: var(--signal); color: var(--signal-ink); }
+  .mission.alert i { background: var(--signal-ink); }
+  .zero-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+  .zero-row .note { margin: 0; }
+  .payload-label { fill: var(--ink); font: 600 11px var(--mono); }
+  .readouts dt { font-family: var(--cond); font-weight: 600; font-size: 12px; letter-spacing: .1em; color: var(--ink-2); text-transform: uppercase; }
+  .readouts dd { margin: 2px 0 0; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .readouts dd.hot { color: var(--signal); }
+
+  .cable { stroke: var(--ink); stroke-width: 1.6; stroke-dasharray: 3 3; fill: none; }
+  .cable.out { animation: dash .5s linear infinite; }
+  .cable.in { animation: dash .5s linear infinite reverse; }
+  @keyframes dash { to { stroke-dashoffset: -12; } }
+  .tick { stroke: var(--ink); stroke-width: 1; }
+  .grid-line { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 1 4; }
+  .scale-label { fill: var(--ink-2); font: 10px var(--mono); }
+  .target-line { stroke: var(--signal); stroke-width: 2; stroke-dasharray: 7 4; }
+  .target-label { fill: var(--signal-ink); font: 600 11px var(--mono); }
+  .empty-label { fill: var(--ink-2); font: 600 12px var(--cond); letter-spacing: .12em; }
+
+  /* ---------- Depth entry ---------- */
+  .depth-entry { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+  .stepper { display: flex; border: 2px solid var(--ink); background: var(--paper); flex: 1 1 260px; }
+  .stepper button {
+    width: 54px; flex: none; border: none; background: transparent; cursor: pointer;
+    font-family: var(--mono); font-size: 22px; font-weight: 600;
+  }
+  .stepper button:first-child { border-right: 2px solid var(--ink); }
+  .stepper button:last-child { border-left: 2px solid var(--ink); }
+  .stepper button:hover { background: var(--paper-2); }
+  .stepper label { flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 6px; padding: 6px 10px; cursor: text; }
+  .stepper input {
+    width: 100%; max-width: 150px; background: none; border: none; outline: none; color: var(--ink);
+    font: 600 38px var(--mono); text-align: right; letter-spacing: -.02em; -moz-appearance: textfield; padding: 0;
+  }
+  .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper:focus-within { outline: 3px solid var(--signal); outline-offset: 2px; }
+  .stepper .unit { font-family: var(--cond); font-weight: 700; font-size: 20px; color: var(--ink-2); }
+
+  .key.primary {
+    background: var(--signal); border-color: var(--signal); color: var(--signal-ink);
+    flex: 1 1 180px; font-size: 19px; padding: 14px 18px;
+  }
+  .key.primary:hover:not(:disabled) { background: var(--signal); filter: brightness(1.06); }
+  .sync { margin-top: 10px; font-size: 12px; display: flex; gap: 8px; align-items: center; }
+  .sync .chip { border: 1.5px solid currentColor; padding: 1px 6px; font-weight: 600; font-size: 11px; letter-spacing: .04em; }
+  .sync.ok { color: #1f8a52; }
+  .sync.stale { color: var(--signal); }
+  .sync.none { color: var(--ink-2); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sync.ok { color: #45c983; } }
+
+  /* ---------- Key banks ---------- */
+  .bank { display: grid; gap: 10px; }
+  .bank.three { grid-template-columns: 1fr .8fr 1fr; }
+  .bank.two { grid-template-columns: 1fr 1fr; }
+  .bank .key { padding: 16px 10px; font-size: 19px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bank .key .sub { font-family: var(--mono); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; opacity: .75; }
+
+  .key.hold { position: relative; overflow: hidden; padding-left: 22px; }
+  .key.hold::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 10px;
+    background: repeating-linear-gradient(-45deg, var(--signal) 0 5px, var(--ink) 5px 10px);
+  }
+  .key.hold .fill {
+    position: absolute; inset: 0; background: var(--signal); transform-origin: left;
+    transform: scaleX(0); pointer-events: none; z-index: 0;
+  }
+  .key.hold.holding .fill { transform: scaleX(1); transition: transform .9s linear; }
+  .key.hold > span { position: relative; z-index: 1; }
+  .key.hold.holding { color: var(--signal-ink); }
+
+  /* ---------- Log ---------- */
+  .log { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; border: 1px solid var(--rule); background: var(--paper); }
+  .log li { display: grid; grid-template-columns: 68px 18px 1fr; gap: 6px; padding: 5px 10px; font-size: 12px; border-bottom: 1px solid var(--faint); }
+  .log li:last-child { border-bottom: none; }
+  .log .t { color: var(--ink-2); }
+  .log .d { font-weight: 600; }
+  .log .tx .d { color: var(--signal); }
+  .log .sys .m { color: var(--ink-2); }
+  .log .empty { display: block; color: var(--ink-2); }
+
+  .ticker {
+    position: fixed; left: 50%; bottom: 16px; transform: translate(-50%, 12px); opacity: 0;
+    background: var(--ink); color: var(--paper); padding: 10px 14px; font-size: 13px;
+    max-width: calc(100% - 32px); transition: opacity .2s, transform .2s; pointer-events: none;
+    border-left: 6px solid #2dbd6e;
+  }
+  .ticker.bad { border-left-color: var(--signal); }
+  .ticker.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 480px) {
+    .linkbox { margin-left: 0; width: 100%; border-top: 2px solid var(--ink); justify-content: space-between; }
+    .plate { gap: 0; }
+    .bank.three .key { font-size: 16px; padding: 14px 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cable.out, .cable.in, .lamp.wait { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="plate">
+    <div class="ident">
+      <div class="tag">PRU-01</div>
+      <div class="title">
+        <h1>Payload Release</h1>
+        <small>Surface control station</small>
+      </div>
+    </div>
+    <div class="linkbox">
+      <i id="lamp" class="lamp"></i>
+      <div class="linktext"><b id="linkText">No link</b><span id="viaText">Starting…</span></div>
+      <button id="connectBtn" class="key small" type="button" hidden>Connect</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden>
+    <b>No Bluetooth in this browser</b>
+    Safari and Chrome on iPhone can't reach Bluetooth from a web page. Open this page in the free <strong>Bluefy</strong> app, use Chrome on Android or a laptop, or go through the Raspberry Pi.
+  </div>
+
+  <main class="grid">
+    <aside class="column" aria-label="Water column">
+      <div id="mission" class="mission"><i></i><span id="missionText">Idle</span></div>
+      <svg id="col" role="img" aria-label="Water column showing the release depth"></svg>
+      <dl class="readouts">
+        <div><dt>Line out</dt><dd id="roDepth" class="big">—</dd></div>
+        <div><dt>Release at</dt><dd id="roTarget" class="big">—</dd></div>
+        <div><dt>Winch</dt><dd id="roWinch">—</dd></div>
+        <div><dt>Latch</dt><dd id="roLatch">—</dd></div>
+      </dl>
+    </aside>
+
+    <div>
+      <section class="section">
+        <div class="section-head"><span class="n">01</span>Unlatch · pay out to depth</div>
+        <div class="depth-entry">
+          <div class="stepper">
+            <button type="button" id="minus" aria-label="Decrease depth">−</button>
+            <label><input id="depth" type="number" inputmode="decimal" min="0.5" max="100" step="0.5" value="10" aria-label="Release depth in metres"><span class="unit">M</span></label>
+            <button type="button" id="plus" aria-label="Increase depth">+</button>
+          </div>
+          <button class="key primary" id="uploadBtn" type="button">Upload depth →</button>
+        </div>
+        <div id="sync" class="sync none"><span class="chip">NOT SET</span><span id="syncText">No release depth on the unit yet.</span></div>
+        <p class="note">Latch the payload, upload the depth, then pay out. When the winch encoder reads this depth the unit stops, unlatches, waits, and pays back in to the surface.</p>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><span class="n">02</span>Winch<span class="aside" id="winchAside"></span></div>
+        <div class="bank three">
+          <button class="key" id="payoutBtn" type="button" aria-pressed="false"><span>Pay out ↓</span><span class="sub">lower</span></button>
+          <button class="key" id="stopBtn" type="button" aria-pressed="false"><span>Stop ■</span><span class="sub">hold</span></button>
+          <button class="key" id="payinBtn" type="button" aria-pressed="false"><span>Pay in ↑</span><span class="sub">raise</span></button>
+        </div>
+        <div class="zero-row">
+          <button class="key small" id="zeroBtn" type="button">Set 0 m here</button>
+          <p class="note">Tells the encoder the payload is at the surface. Paying in stops automatically at 0 m.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><span class="n">03</span>Latch</div>
+        <div class="bank two">
+          <button class="key" id="latchBtn" type="button" aria-pressed="false"><span>Latch</span><span class="sub">secure payload</span></button>
+          <button class="key hold" id="unlatchBtn" type="button" aria-pressed="false"><i class="fill"></i><span>Unlatch</span><span class="sub">press &amp; hold</span></button>
+        </div>
+        <p class="note">Unlatch releases the payload immediately. Hold the key for a second to confirm.</p>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><span class="n">04</span>Event log</div>
+        <ul id="log" class="log"></ul>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div id="ticker" class="ticker" role="status"></div>
+
+<script>
+/* =====================================================================
+   One page, two ways to reach the ESP32:
+   - PI mode:  page is served by payload_server.py -> talks to /api/*
+   - BLE mode: page opened anywhere else -> Web Bluetooth straight to the ESP32
+   ===================================================================== */
+const CFG = {
+  maxDepth: 100,
+  deviceName: "ESP32-BLE",
+  service: "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+  rx: "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
+  tx: "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
+};
+
+const $ = (id) => document.getElementById(id);
+const S = {
+  mode: null,          // "pi" | "ble"
+  link: "off",         // off | wait | on | down (pi server unreachable)
+  latch: "unknown",    // latched | unlatched | unknown
+  winch: "unknown",    // out | in | stop | unknown
+  target: null,        // release depth on the unit (m)
+  depth: null,         // current line-out depth from the winch encoder (m)
+  event: null,         // last event from the unit: RELEASED | RETURNING | SURFACED | MAX LINE
+  busy: false,
+  log: [],
+};
+
+/* ---------- small helpers ---------- */
+let tickTimer;
+function tick(msg, bad = false) {
+  const t = $("ticker");
+  t.textContent = msg;
+  t.className = "ticker show" + (bad ? " bad" : "");
+  clearTimeout(tickTimer);
+  tickTimer = setTimeout(() => (t.className = "ticker"), 2800);
+}
+const fmt = (d) => Number(d).toFixed(1);
+const now = () => new Date().toTimeString().slice(0, 8);
+
+function localLog(dir, msg) {
+  S.log.unshift({ t: now(), dir, msg });
+  S.log.length = Math.min(S.log.length, 60);
+}
+
+function parseLine(line) {
+  const [k, v] = line.trim().split(/\s+/);
+  if (k === "LATCHED") S.latch = "latched";
+  else if (k === "UNLATCHED") S.latch = "unlatched";
+  else if (k === "WINCH" && v) S.winch = v.toLowerCase();
+  else if (k === "DEPTH" && v) S.target = v === "NONE" ? null : parseFloat(v);
+  else if (k === "AT" && v) S.depth = parseFloat(v);
+  else if (k === "EVENT") S.event = line.trim().slice(6);
+  if (k === "LATCHED") S.event = null;
+  return k;
+}
+
+/* ---------- Raspberry Pi transport ---------- */
+const Pi = {
+  async probe() {
+    try {
+      const r = await fetch("api/status", { cache: "no-store" });
+      return r.ok && (r.headers.get("content-type") || "").includes("json");
+    } catch { return false; }
+  },
+  async poll() {
+    try {
+      const r = await fetch("api/status", { cache: "no-store" });
+      const j = await r.json();
+      S.link = j.connected ? "on" : "wait";
+      S.latch = j.latch; S.winch = j.winch; S.target = j.target_depth;
+      S.depth = j.depth; S.event = j.event;
+      S.log = j.log;
+    } catch {
+      S.link = "down";
+    }
+    render();
+  },
+  async send(cmd) {
+    const r = await fetch("api/command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cmd }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || "Command failed");
+    setTimeout(() => Pi.poll(), 250);
+  },
+  start() {
+    S.mode = "pi";
+    this.poll();
+    setInterval(() => this.poll(), 1000);
+  },
+};
+
+/* ---------- Web Bluetooth transport ---------- */
+const Ble = {
+  device: null, rxChar: null, buf: "", manual: false,
+  enc: new TextEncoder(), dec: new TextDecoder(),
+
+  onNotify(e) {
+    Ble.buf += Ble.dec.decode(e.target.value);
+    let i;
+    while ((i = Ble.buf.indexOf("\n")) >= 0) {
+      const line = Ble.buf.slice(0, i).trim();
+      Ble.buf = Ble.buf.slice(i + 1);
+      if (!line) continue;
+      if (parseLine(line) !== "AT") localLog("rx", line);  // depth stream is too chatty to log
+    }
+    render();
+  },
+
+  async open() {
+    S.link = "wait"; render();
+    const server = await this.device.gatt.connect();
+    const svc = await server.getPrimaryService(CFG.service);
+    this.rxChar = await svc.getCharacteristic(CFG.rx);
+    const tx = await svc.getCharacteristic(CFG.tx);
+    tx.addEventListener("characteristicvaluechanged", (e) => this.onNotify(e));
+    await tx.startNotifications();
+    this.buf = "";
+    S.link = "on";
+    localLog("sys", "Linked to " + (this.device.name || CFG.deviceName));
+    render();
+    await this.send("status");
+  },
+
+  async onLost() {
+    Ble.rxChar = null;
+    S.link = "off"; render();
+    if (Ble.manual) { localLog("sys", "Disconnected"); render(); return; }
+    localLog("sys", "Link lost, retrying");
+    for (let n = 1; n <= 5 && S.link !== "on" && !Ble.manual; n++) {
+      await new Promise((r) => setTimeout(r, 1500 * n));
+      try { await Ble.open(); return; } catch {}
+    }
+    if (S.link !== "on") { S.link = "off"; localLog("sys", "Could not reconnect"); render(); }
+  },
+
+  async toggle() {
+    if (!navigator.bluetooth) { tick("This browser has no Bluetooth. On iPhone use Bluefy.", true); return; }
+    if (S.link === "on") { this.manual = true; this.device.gatt.disconnect(); return; }
+    this.manual = false;
+    try {
+      if (!this.device) {
+        this.device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [CFG.service] }, { name: CFG.deviceName }],
+          optionalServices: [CFG.service],
+        });
+        this.device.addEventListener("gattserverdisconnected", () => this.onLost());
+      }
+      await this.open();
+    } catch (e) {
+      if (e.name !== "NotFoundError") tick("Connection failed: " + e.message, true);
+      S.link = "off"; render();
+    }
+  },
+
+  async send(cmd) {
+    if (!this.rxChar) throw new Error("Not connected");
+    localLog("tx", cmd); render();
+    const data = this.enc.encode(cmd + "\n");
+    if (this.rxChar.writeValueWithResponse) await this.rxChar.writeValueWithResponse(data);
+    else await this.rxChar.writeValue(data);
+  },
+
+  start() {
+    S.mode = "ble";
+    $("connectBtn").hidden = false;
+    $("connectBtn").onclick = () => this.toggle();
+    if (!navigator.bluetooth) $("banner").hidden = false;
+    render();
+  },
+};
+
+const link = () => (S.mode === "pi" ? Pi : Ble);
+
+async function command(cmd, okMsg) {
+  if (S.busy) return;
+  S.busy = true; render();
+  try { await link().send(cmd); if (okMsg) tick(okMsg); }
+  catch (e) { tick(e.message, true); }
+  finally { S.busy = false; render(); }
+}
+
+/* ---------- Water column drawing ---------- */
+function niceScale(target) {
+  if (target == null) return 20;
+  const want = target * 1.25;
+  for (const s of [10, 20, 30, 50, 75, 100, 150, 200]) if (want <= s) return s;
+  return Math.ceil(want / 50) * 50;
+}
+
+function drawColumn() {
+  const svg = $("col");
+  const W = svg.clientWidth || 300, H = svg.clientHeight || 400;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const surface = 46, bottom = H - 16, axis = 42;
+  const max = niceScale(Math.max(S.target ?? 0, S.depth ?? 0) || null);
+  const step = [1, 2, 5, 10, 20, 25, 50].find((s) => max / s <= (H > 300 ? 8 : 4)) || 50;
+  const y = (d) => surface + (d / max) * (bottom - surface);
+  const cx = axis + (W - axis) * 0.52;
+  const p = [];
+
+  p.push(`<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" style="stop-color:var(--water);stop-opacity:.10"/>
+    <stop offset="1" style="stop-color:var(--water);stop-opacity:.38"/></linearGradient></defs>`);
+  p.push(`<rect x="${axis}" y="${surface}" width="${W - axis}" height="${bottom - surface + 16}" fill="url(#wg)"/>`);
+
+  // surface swell
+  let wave = `M${axis} ${surface}`;
+  for (let x = axis; x <= W; x += 4) wave += ` L${x} ${(surface + Math.sin((x - axis) / 7) * 2).toFixed(2)}`;
+  p.push(`<path d="${wave}" fill="none" stroke="var(--water)" stroke-width="2"/>`);
+
+  // scale
+  p.push(`<line class="tick" x1="${axis}" y1="${surface}" x2="${axis}" y2="${bottom}"/>`);
+  for (let d = 0; d <= max + 1e-9; d += step) {
+    const yy = y(d);
+    p.push(`<line class="tick" x1="${axis - 6}" y1="${yy}" x2="${axis}" y2="${yy}"/>`);
+    if (d > 0) p.push(`<line class="grid-line" x1="${axis}" y1="${yy}" x2="${W}" y2="${yy}"/>`);
+    p.push(`<text class="scale-label" x="${axis - 10}" y="${yy + 3.5}" text-anchor="end">${d}</text>`);
+  }
+  p.push(`<text class="scale-label" x="${axis - 10}" y="${surface - 16}" text-anchor="end">m</text>`);
+
+  // davit + winch drum
+  const drumY = 16;
+  p.push(`<path d="M${cx - 30} ${surface - 4} L${cx - 30} ${drumY} L${cx} ${drumY}" fill="none" stroke="var(--ink)" stroke-width="3"/>`);
+  p.push(`<circle cx="${cx}" cy="${drumY}" r="7" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>`);
+  p.push(`<circle cx="${cx}" cy="${drumY}" r="1.8" fill="var(--ink)"/>`);
+
+  // cable + payload at the current line-out depth
+  const dNow = Math.max(0, S.depth ?? 0);
+  const hookY = Math.max(surface + 6, y(dNow));
+  const winchClass = S.link === "on" || S.mode === "pi" ? S.winch : "";
+  p.push(`<line class="cable ${winchClass}" x1="${cx}" y1="${drumY + 7}" x2="${cx}" y2="${hookY}"/>`);
+  p.push(`<path d="M${cx} ${hookY} v6 a4 4 0 0 0 8 0" fill="none" stroke="var(--ink)" stroke-width="2"/>`);
+  if (S.latch === "unlatched") {
+    // released: leave a ghost of the payload where it dropped
+    const dropY = S.event && S.target != null && /RELEASED|RETURNING|SURFACED/.test(S.event) ? y(S.target) + 10 : hookY + 22;
+    p.push(`<rect x="${cx - 13}" y="${dropY}" width="26" height="18" fill="none" stroke="var(--signal)" stroke-width="2" stroke-dasharray="4 3"/>`);
+  } else {
+    p.push(`<rect x="${cx - 13}" y="${hookY + 10}" width="26" height="18" fill="${S.latch === "latched" ? "var(--ink)" : "none"}" stroke="var(--ink)" stroke-width="2"/>`);
+  }
+  if (S.depth != null && dNow > 0) {
+    p.push(`<text class="payload-label" x="${cx - 20}" y="${hookY + 23}" text-anchor="end">${fmt(dNow)} m</text>`);
+  }
+
+  // release depth marker
+  if (S.target != null) {
+    const ty = y(S.target);
+    const label = `RELEASE ${fmt(S.target)} m`;
+    const lw = label.length * 6.8 + 12;
+    p.push(`<line class="target-line" x1="${axis}" y1="${ty}" x2="${W}" y2="${ty}"/>`);
+    p.push(`<path d="M${axis} ${ty} l-8 -5 v10 z" fill="var(--signal)"/>`);
+    p.push(`<rect x="${W - lw - 6}" y="${ty - 20}" width="${lw}" height="17" fill="var(--signal)"/>`);
+    p.push(`<text class="target-label" x="${W - 12}" y="${ty - 8}" text-anchor="end">${label}</text>`);
+  } else {
+    p.push(`<text class="empty-label" x="${axis + (W - axis) / 2}" y="${(surface + bottom) / 2 + 30}" text-anchor="middle">NO RELEASE DEPTH SET</text>`);
+  }
+
+  svg.innerHTML = p.join("");
+}
+
+/* ---------- Render ---------- */
+function render() {
+  const live = S.link === "on";
+
+  // header link state
+  const lamp = $("lamp");
+  lamp.className = "lamp" + (live ? " on" : S.link === "wait" ? " wait" : "");
+  if (S.mode === "pi") {
+    $("linkText").textContent = { on: "Linked", wait: "Searching", down: "Pi offline", off: "No link" }[S.link];
+    $("viaText").textContent = S.link === "down" ? "Can't reach " + location.host : "via Raspberry Pi · " + location.host;
+  } else {
+    $("linkText").textContent = { on: "Linked", wait: "Connecting", off: "No link", down: "No link" }[S.link];
+    $("viaText").textContent = "Bluetooth · this device";
+    $("connectBtn").textContent = live ? "Disconnect" : "Connect";
+  }
+
+  // mission strip
+  const m = $("mission");
+  let mt = "Idle", mc = "";
+  if (!live) { mt = S.mode === "pi" && S.link === "down" ? "Pi offline" : "No link to unit"; }
+  else if (S.event === "RELEASED" && S.latch === "unlatched" && S.winch === "stop") { mt = "Released · waiting"; mc = "alert"; }
+  else if (S.winch === "in" && S.event === "RETURNING") { mt = "Returning to surface"; mc = "active"; }
+  else if (S.winch === "out" && S.latch === "latched" && S.target != null) { mt = `Descending to ${fmt(S.target)} m`; mc = "active"; }
+  else if (S.winch === "out") { mt = "Paying out"; mc = "active"; }
+  else if (S.winch === "in") { mt = "Paying in"; mc = "active"; }
+  else if (S.event === "MAX LINE") { mt = "Stopped · max line out"; mc = "alert"; }
+  else if (S.event === "SURFACED") { mt = "At surface"; }
+  else if (S.latch === "latched" && S.target != null) { mt = `Ready · release ${fmt(S.target)} m`; }
+  m.className = "mission " + mc;
+  $("missionText").textContent = mt;
+
+  // readouts
+  $("roDepth").textContent = S.depth != null ? fmt(S.depth) + " m" : "—";
+  $("roTarget").textContent = S.target != null ? fmt(S.target) + " m" : "—";
+  $("roTarget").className = "big" + (S.target != null ? " hot" : "");
+  $("roWinch").textContent = { out: "Paying out", in: "Paying in", stop: "Stopped" }[S.winch] || "—";
+  $("roLatch").textContent = { latched: "Latched", unlatched: "Unlatched" }[S.latch] || "—";
+
+  // depth sync state
+  const typed = parseFloat($("depth").value);
+  const sync = $("sync");
+  if (S.target == null) {
+    sync.className = "sync none";
+    sync.firstElementChild.textContent = "NOT SET";
+    $("syncText").textContent = "No release depth on the unit yet.";
+  } else if (Math.abs(typed - S.target) < 0.05) {
+    sync.className = "sync ok";
+    sync.firstElementChild.textContent = "ON UNIT";
+    $("syncText").textContent = `Unit will release at ${fmt(S.target)} m.`;
+  } else {
+    sync.className = "sync stale";
+    sync.firstElementChild.textContent = "CHANGED";
+    $("syncText").textContent = `Unit is still set to ${fmt(S.target)} m. Upload to change it.`;
+  }
+
+  // keys
+  const off = !live || S.busy;
+  for (const id of ["uploadBtn", "payoutBtn", "stopBtn", "payinBtn", "zeroBtn", "latchBtn", "unlatchBtn"]) $(id).disabled = off;
+  $("payoutBtn").setAttribute("aria-pressed", S.winch === "out");
+  $("payinBtn").setAttribute("aria-pressed", S.winch === "in");
+  $("stopBtn").setAttribute("aria-pressed", S.winch === "stop");
+  $("latchBtn").setAttribute("aria-pressed", S.latch === "latched");
+  $("unlatchBtn").setAttribute("aria-pressed", S.latch === "unlatched");
+  $("winchAside").textContent = live && S.winch !== "unknown"
+    ? $("roWinch").textContent.toLowerCase() + (S.depth != null ? ` · ${fmt(S.depth)} m out` : "") : "";
+
+  // log
+  const log = $("log");
+  log.replaceChildren();
+  if (!S.log.length) {
+    const li = document.createElement("li"); li.className = "empty"; li.textContent = "Nothing yet.";
+    log.appendChild(li);
+  }
+  for (const e of S.log) {
+    const li = document.createElement("li"); li.className = e.dir || "sys";
+    const t = document.createElement("span"); t.className = "t"; t.textContent = e.t;
+    const d = document.createElement("span"); d.className = "d"; d.textContent = { tx: "›", rx: "‹" }[e.dir] || "·";
+    const m = document.createElement("span"); m.className = "m"; m.textContent = e.msg;
+    li.append(t, d, m); log.appendChild(li);
+  }
+
+  drawColumn();
+}
+
+/* ---------- Controls ---------- */
+function stepDepth(delta) {
+  const v = Math.min(CFG.maxDepth, Math.max(0.5, (parseFloat($("depth").value) || 0) + delta));
+  $("depth").value = v.toFixed(1).replace(/\.0$/, "");
+  render();
+}
+$("minus").onclick = () => stepDepth(-0.5);
+$("plus").onclick = () => stepDepth(0.5);
+$("depth").addEventListener("input", render);
+
+$("uploadBtn").onclick = () => {
+  const d = parseFloat($("depth").value);
+  if (!(d > 0 && d <= CFG.maxDepth)) return tick(`Depth must be between 0.5 and ${CFG.maxDepth} m`, true);
+  command(`depth:${fmt(d)}`, `Release depth ${fmt(d)} m sent`);
+};
+$("payoutBtn").onclick = () => command("payout");
+$("payinBtn").onclick = () => command("payin");
+$("stopBtn").onclick = () => command("stop");
+$("latchBtn").onclick = () => command("latch", "Latch sent");
+$("zeroBtn").onclick = () => {
+  if (S.depth > 0.2 && !confirm(`Set the current position (${fmt(S.depth)} m) as the surface?`)) return;
+  command("zero", "Depth zeroed");
+};
+
+// press-and-hold to unlatch
+(() => {
+  const btn = $("unlatchBtn");
+  let timer = null;
+  const start = (e) => {
+    if (btn.disabled || timer) return;
+    if (e.type === "keydown" && e.key !== " " && e.key !== "Enter") return;
+    if (e.type === "keydown") e.preventDefault();
+    btn.classList.add("holding");
+    timer = setTimeout(() => { cancel(); command("unlatch", "Unlatch sent"); }, 900);
+  };
+  const cancel = () => { clearTimeout(timer); timer = null; btn.classList.remove("holding"); };
+  btn.addEventListener("pointerdown", start);
+  btn.addEventListener("keydown", start);
+  for (const ev of ["pointerup", "pointerleave", "pointercancel", "keyup", "blur"]) btn.addEventListener(ev, cancel);
+  btn.addEventListener("click", (e) => e.preventDefault());
+  btn.addEventListener("contextmenu", (e) => e.preventDefault());
+})();
+
+window.addEventListener("resize", drawColumn);
+
+/* ---------- Boot ---------- */
+(async () => {
+  render();
+  if (await Pi.probe()) Pi.start();
+  else Ble.start();
+})();
+</script>
+</body>
+</html>
